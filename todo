@@ -1,0 +1,15 @@
+- regressor
+- Data generator
+- Generator for data generator
+- DNN
+- proper tests
+-------------------------------------------------
+p_m, p_s = f_G(x, y)
+p = p_m + e * ln(p_s)
+t = g(G, p)
+y_ = h(t, x)
+
+regression_loss = l2(y, y_)
+diversity_loss = diversity(p)
+
+total_loss = regression_loss + alpha * diversity_loss
