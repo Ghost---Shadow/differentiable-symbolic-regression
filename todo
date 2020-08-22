@@ -13,3 +13,13 @@ regression_loss = l2(y, y_)
 diversity_loss = diversity(p)
 
 total_loss = regression_loss + alpha * diversity_loss
+-------------------------------------------------
+p_m, p_s = f(x, y)
+p = p_m + e * ln(p_s)
+p = softmax(p, axis=-1)
+y_ = h_op(p, x)
+
+regression_loss = l2(y, y_)
+diversity_loss = -entrophy(p, axis=1)
+kl_div_loss = kl_div(p)
+sharpness_loss = entrophy(p, axis=-1)
