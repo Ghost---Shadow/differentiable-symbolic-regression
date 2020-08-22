@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from src.library.stacks import stack_push, stack_pop, stack_peek, new_stack, new_stack_from_buffer
+from library.stacks import stack_push, stack_pop, stack_peek, new_stack, new_stack_from_buffer
 
 
 @tf.function
