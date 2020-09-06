@@ -1,8 +1,24 @@
-- regressor
+- Pretty print guess_tensor
+- Regress poly with no constants
+    - operate function 
+    - eager process block function 
+    - unrolled process block function 
+    - train end to end
+- Regress poly with constants
+    - stack constants with variables, train end to end
+- bucketed guess
+    - bucketed guess function
+    - train end to end
+- make all functions batched
+    - batch operate
+    - batch process block
+    - batch unbucket
+    - train end to end
+-------------------------------------------------
 - Data generator
-- Generator for data generator
-- DNN
-- proper tests
+- Features data conv block
+- KL div block 
+- Deconv block
 -------------------------------------------------
 p_m, p_s = f_G(x, y)
 p = p_m + e * ln(p_s)
@@ -23,3 +39,32 @@ regression_loss = l2(y, y_)
 diversity_loss = -entrophy(p, axis=1)
 kl_div_loss = kl_div(p)
 sharpness_loss = entrophy(p, axis=-1)
+-------------------------------------------------
+features_data = global_max_pool(conv2d(data))
+features_cov_data = global_max_pool(conv2d(cov_data))
+features_stat_data = dense(stat_data)
+
+features_concat = concat(features_data, features_cov_data, features_stat_data)
+features_latent_m, features_latent_std = dense(features_concat)
+
+features_latent = features_latent_m + e * ln(features_latent_std)
+
+guess_tensor = deconv2D(features_latent)
+
+bucketed_constant_guess = guess_tensor[0, :]
+operands = guess_tensor[1, :]
+operators = guess_tensor[2:, :]
+-------------------------------------------------
+constant_guess = buckets_to_float32(bucketed_constant_guess)
+
+batch_y = data[0]
+data_with_constants = concat(data[1:], tile(constant_guess))
+batch_x = dot(operands, data_with_constants)
+-------------------------------------------------
+
+acc = batch_x
+for operator_batch in operators:
+    acc = operate(acc, operator_batch)
+
+loss = l2_loss(acc, batch_y)
+-------------------------------------------------
