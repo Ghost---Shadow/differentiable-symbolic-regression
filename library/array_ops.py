@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+from library.vector_math import dot
+
 
 @tf.function
 def assign_index(arr, index, element):
@@ -74,13 +76,16 @@ def superposition_lookup_vectored(arr, indices):
 @tf.custom_gradient
 def asymmetrical_vectored_lookup(v, k):
     k_shape = tf.shape(k)
+    v_shape = tf.shape(v)
+
+    tf.debugging.assert_equal(k_shape, v_shape)
 
     # Pick the value at the most likely index, non-differentiably
-    b_idx = tf.argmax(k, axis=-1)
-    idx_len = tf.shape(b_idx)[0]
-    a_idx = tf.range(idx_len, dtype=tf.int64)
-    idx = tf.stack([a_idx, b_idx], axis=1)
-    forward_result = tf.gather_nd(v, idx)
+    flat_k = tf.reshape(k, [-1, k_shape[-1]])
+    collapsed_k = tf.argmax(flat_k, -1)
+    collapsed_k = tf.one_hot(collapsed_k, k_shape[-1])
+    unflat_k = tf.reshape(collapsed_k, k_shape)
+    forward_result = dot(v, unflat_k)
 
     def grad(upstream_grads):
         # Estimate the target scalar which we want to look up
