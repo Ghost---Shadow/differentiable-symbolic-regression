@@ -50,7 +50,7 @@ def eqn_to_block_tensor(fn, xs, tree_depth=3, num_op_types=4):
 
     operators = []
     for _ in range(tree_depth):
-        operators.append(tf.one_hot(np.arange(NUM_LEAVES) % num_op_types, num_op_types))
+        operators.append(tf.one_hot(np.arange(NUM_LEAVES // 2) % num_op_types, num_op_types))
     operators = tf.stack(operators)
 
     values = tf.constant([values], dtype=tf.float32)  # [1, datapoint_x, data_point_dim]

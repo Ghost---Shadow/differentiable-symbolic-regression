@@ -31,13 +31,14 @@ def bind_opt_train_step(opt, levels):
         variables = [operand_guess, operator_guess]
         grads = tape.gradient(loss, variables)
         # grads = [tf.clip_by_norm(g, 100.0) for g in grads]
+        # grads = [tf.clip_by_value(g, -1, 1) for g in grads]
         opt.apply_gradients(zip(grads, variables))
 
         # const_guess.assign(to_prob_dist_all(const_guess))
         operand_guess.assign(to_prob_dist_all(operand_guess))
         operator_guess.assign(to_prob_dist_all(operator_guess))
 
-        return loss, result
+        return loss, result, grads
 
     return train_step
 
