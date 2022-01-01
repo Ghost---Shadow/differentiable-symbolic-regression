@@ -75,6 +75,9 @@ def superposition_lookup_vectored(arr, indices):
 @tf.function
 @tf.custom_gradient
 def asymmetrical_vectored_lookup(v, k):
+    '''
+    If chained, we assume that closer elements are in the same dimension. (TODO: Clarify)
+    '''
     k_shape = tf.shape(k)
     v_shape = tf.shape(v)
 
@@ -106,7 +109,15 @@ def asymmetrical_vectored_lookup(v, k):
         v_grad = k
 
         upstream_grads = tf.expand_dims(upstream_grads, -1)
-        return upstream_grads * v_grad, tf.math.abs(upstream_grads) * k_grad
+
+        # 1. The k_grad should dictate the direction of the vector. So, upstream grad is always positive
+        # 2. We want it to scale to zero as it gets closer to target. So we clip it between 0 and 1.
+        # 3. If there is an exact match in the vector, then we dont send the gradients downstream for other entries. (disabled)
+        min_clipped_abs_grad = tf.abs(upstream_grads)
+        min_clipped_abs_grad = tf.clip_by_value(min_clipped_abs_grad, 0, 1)
+        # min_clipped_abs_grad = tf.reduce_min(min_clipped_abs_grad)
+
+        return upstream_grads * v_grad, min_clipped_abs_grad * k_grad
 
     return forward_result, grad
 
@@ -172,7 +183,7 @@ def match_shapes(x, y):
 
     # Find the difference in ranks
     common_shape = h_shape[:l_rank]
-    tf.debugging.assert_equal(common_shape, l_shape, 'No common shape to broadcast')
+    tf.debugging.assert_equal(common_shape, l_shape, "No common shape to broadcast")
     padding = tf.ones(h_rank - l_rank, dtype=tf.int32)
 
     # Pad the difference with ones and reshape
